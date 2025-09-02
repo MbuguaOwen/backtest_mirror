@@ -1,0 +1,38 @@
+# Python
+# Compiled Python files and build artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.build/
+dist/
+build/
+.eggs/
+*.egg-info/
+
+# Environments
+# Virtual environment directory
+.venv/
+
+# IDE
+# Local IDE configuration files
+.vscode/
+.idea/
+
+# Data, state, and outputs
+# Data files that are not part of the source code
+# These directories contain large, generated, or transient data
+state/
+data/
+inputs/
+outputs/
+*.sqlite*
+*.db
+*.db-journal
+*.csv
+
+# OS
+# Operating System-specific files that clutter repositories
+.DS_Store
+Thumbs.db

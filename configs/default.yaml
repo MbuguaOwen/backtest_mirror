@@ -1,0 +1,73 @@
+# Minimal, live-mirroring backtest config
+paths:
+  inputs_dir: "inputs"
+  outputs_dir: "outputs"
+
+symbols: ["BTCUSDT"]   # tune one at a time; add ["ETHUSDT","SOLUSDT"] later
+
+# Months to backtest (UTC). Keep long enough for warmups & event coverage.
+months: ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07"]
+
+engine:
+  warmup:
+    min_1m_bars: 1200           # ~20h; protects ATR/zscore/percentiles
+
+# -------- Regime (TSMOM) --------
+regime:
+  ts_mom:
+    require_majority: 2         # 2 of 3 bullish/bearish to set regime
+    timeframes:
+      - { tf: "1min",  lookback_closes: 30 }   # ~30 minutes
+      - { tf: "5min",  lookback_closes: 24 }   # ~2 hours
+      - { tf: "15min", lookback_closes: 16 }   # ~4 hours
+
+# -------- EventWave (Squeeze → Release) --------
+eventwave:
+  squeeze:
+    atr_window: 50              # ATR basis
+    pct_of_median: 0.85         # squeeze if ATR < 0.85 × rolling median ATR
+    median_window: 200
+  release:
+    zscore_window: 50           # breakout ignition sensitivity
+    zscore_threshold: 1.25
+
+# -------- Trigger (breakout confirmation) --------
+trigger:
+  mode: "donchian"              # "donchian" | "zscore"
+  donchian_window: 40
+  zscore_window: 50
+  zscore_threshold: 1.50
+
+# -------- Entry --------
+entry:
+  direction: "both"             # "long" | "short" | "both"
+  next_bar_fill: "open"         # assume next bar open fill
+  cooldown_bars: 15             # avoid clustering
+
+# -------- Risk / TSL --------
+risk:
+  atr:
+    window: 50
+    method: "wilder"            # "sma" | "wilder"
+  sl_mult: 15.0                 # initial SL distance in ATRs
+  tp_mult: 0.0                  # 0 = no fixed TP; rely on TSL
+  be:
+    enabled: true
+    threshold_R: 0.5            # move SL to entry after +0.5R
+  tsl:
+    enabled: true
+    tsl_atr_mult: 10.0          # target trail gap = k × ATR
+    step_atr_mult: 1.0          # step made after price advances this much
+    first_step_delay_secs: 900  # 15 min grace after TSL_ON
+    min_step_secs: 300          # min 5 min between steps
+    floor_from_med_mult: 1.0    # enforce floor using median ATR × this
+    quantize_tick_size: 0.10    # quantize stop levels
+  server_stops:
+    enabled: false              # set true only when mirroring exchange behavior tightly
+    min_replace_secs: 60        # debounce any replace attempts
+
+# -------- Symbol specifics --------
+symbols_cfg:
+  BTCUSDT: { tick_size: 0.10 }
+  ETHUSDT: { tick_size: 0.05 }
+  SOLUSDT: { tick_size: 0.001 }
