@@ -32,6 +32,12 @@ outputs/
 *.db-journal
 *.csv
 
+# Additional ignores for this project
+venv/
+inputs/_ohlcv_cache/
+*.parquet
+*.zip
+
 # OS
 # Operating System-specific files that clutter repositories
 .DS_Store

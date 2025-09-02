@@ -1,11 +1,13 @@
 import time
 import pandas as pd
 import numpy as np
+from tqdm.auto import tqdm
 from .regime import RegimeClassifier
 from .eventwave import EventWave
 from .trigger import Trigger
 from .entry import EntryManager
 from .risk import RiskManager, Trade
+
 
 class BacktestEngine:
     def __init__(self, cfg, symbol):
@@ -27,6 +29,19 @@ class BacktestEngine:
 
     def run(self, df):
         df = df.copy()
+        # Ensure datetime index from 'ts' column if provided; else coerce index
+        if "ts" in df.columns:
+            try:
+                df.index = pd.to_datetime(df["ts"], utc=True)
+                df.drop(columns=["ts"], inplace=True)
+            except Exception:
+                pass
+        if isinstance(df.index, pd.DatetimeIndex):
+            if df.index.tz is None:
+                df.index = df.index.tz_localize("UTC")
+        else:
+            df.index = pd.to_datetime(df.index, utc=True, errors="coerce")
+        df.sort_index(inplace=True)
         # Precompute wave/regime/atr
         squeeze, rel_up, rel_dn, atr, med_atr = self.wave.compute(df)
         regime = self.regime.compute(df["close"])
@@ -47,7 +62,7 @@ class BacktestEngine:
         last_fill_signal = None
 
         # Walk bars
-        for ts, row in df.iterrows():
+        for ts, row in tqdm(df.iterrows(), total=len(df), desc=self.symbol, unit="bar", leave=True):
             i_epoch = self._epoch(ts)
 
             # Skip until warmup complete
@@ -84,7 +99,7 @@ class BacktestEngine:
 
                 if long_ok or short_ok:
                     side = 1 if long_ok else -1
-                    # Fill at next bar open → we approximate using current open for simplicity,
+                    # Fill at next bar open - we approximate using current open for simplicity,
                     # but we can lag by 1 bar if strict.
                     fill_px = row["open"]
                     open_trade = self.risk.open_trade(self._epoch(ts), fill_px, side, row["atr"], row["med_atr"])
@@ -125,3 +140,4 @@ class BacktestEngine:
             "config_snapshot": self.cfg,
         }
         return trades_df, audit
+

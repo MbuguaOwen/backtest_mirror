@@ -3,10 +3,15 @@ paths:
   inputs_dir: "inputs"
   outputs_dir: "outputs"
 
-symbols: ["BTCUSDT"]   # tune one at a time; add ["ETHUSDT","SOLUSDT"] later
+symbols: ["BTCUSDT"] #, "ETHUSDT", "SOLUSDT"
 
-# Months to backtest (UTC). Keep long enough for warmups & event coverage.
-months: ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07"]
+# Months can be provided explicitly either here or under data.months.
+# Keeping the new preferred location under data.months (commented by default).
+# months: ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07"]
+
+data:
+  # If you want to pin the months explicitly, uncomment and set them:
+ months: ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07"]
 
 engine:
   warmup:
